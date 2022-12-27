@@ -157,7 +157,7 @@ module.exports = async function (fastify, opts) {
       }
     })
 
-    instance.delete("/delete/user/roles", async (request, reply) => {
+    instance.delete("/delete/user/role", async (request, reply) => {
       try {
         const login = getProperty(request.body, "login")
         const role = getProperty(request.body, "role")

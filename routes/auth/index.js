@@ -37,36 +37,30 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.register(async (instance, opts, done) => {
-    instance.addHook("preHandler", async (request, reply) => {
-      await checkReqToken(request, reply, [])
-    })
+  fastify.get("/get/token/check/fast", async function (request, reply) {
+    try {
+      const token = getProperty(request.query, "token")
+      return jwt.verify(token, process.env.JWT_SECRET) ? true : false
+    } catch (err) {
+      console.log(err)
+      reply.code(500).send(err.message)
+    }
+  })
 
-    instance.get("/get/token/check/fast", async function (request, reply) {
-      try {
-        const token = getProperty(request.query, "token")
-        return jwt.verify(token, process.env.JWT_SECRET) ? true : false
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    })
+  fastify.get("/get/user/roles", async function (request, reply) {
+    try {
+      const login = getReqTokenData(request, reply)
 
-    instance.get("/get/user/roles", async function (request, reply) {
-      try {
-        const login = getReqTokenData(request, reply)
-        
-        const pool = new Pool()
-        const res = await pool.query("select roles from users where login=$1", [login])
-        await pool.end()
+      const pool = new Pool()
+      const res = await pool.query("select roles from users where login=$1", [
+        login,
+      ])
+      await pool.end()
 
-        return res.rows
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    }) 
-
-    done()
+      return res.rows
+    } catch (err) {
+      console.log(err)
+      reply.code(500).send(err.message)
+    }
   })
 }
